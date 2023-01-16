@@ -98,7 +98,83 @@ X_train, X_test, y_train, y_test = train_test_split(Features, target, test_size=
 
 #XGB Classifier
 
+XGB = XGBClassifier(n_estimators=300, max_depth=6, learning_rate=0.1).fit(Features, target)
+np.mean(cross_val_score(XGB, Features, target, scoring='accuracy', cv=5))
 
+
+y_pred.head()
+y_pred = XGB.predict(X_test)
+cm=confusion_matrix(y_test, y_pred)
+plt.figure(figsize=(13,5))
+plt.title("Confusion Matrix")
+plt.imshow(cm, alpha=0.5, cmap='PuBu')
+for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
+    plt.text(j, i, cm[i, j], horizontalalignment="center")
+plt.show()
+
+
+#AUC (ROC curve)
+fpr, tpr, thresholds = roc_curve(y_test, y_pred)
+roc_auc = auc(fpr, tpr)
+display = RocCurveDisplay(fpr=fpr, tpr=tpr, roc_auc=roc_auc, estimator_name=XGB)
+display.plot()
+plt.show()
+
+
+
+
+
+#SVM Clasifier
+# Create the SVM classifier
+svm_clf = svm.SVC()
+
+# Perform a grid search to find the best hyperparameters
+grid_search = GridSearchCV(svm_clf, param_grid, cv=5)
+grid_search.fit(X_train, y_train)
+# Get the best hyperparameters from the grid search
+best_params = grid_search.best_params_
+
+# Create a new SVM classifier with the best hyperparameters
+best_svm = svm.SVC(**best_params)
+
+# Fit the best model to the data
+best_svm.fit(X, y)
+
+y_pred=best_svm.pred(X_test)
+
+cm=confusion_matrix(y_test, y_pred)
+plt.figure(figsize=(13,5))
+plt.title("Confusion Matrix")
+plt.imshow(cm, alpha=0.5, cmap='PuBu')
+for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
+    plt.text(j, i, cm[i, j], horizontalalignment="center")
+plt.show()
+
+#AUC (ROC curve)
+fpr, tpr, thresholds = roc_curve(y_test, y_pred)
+roc_auc = auc(fpr, tpr)
+display = RocCurveDisplay(fpr=fpr, tpr=tpr, roc_auc=roc_auc, estimator_name=XGB)
+display.plot()
+plt.show()
+
+#Cross validation by Kfold
+from sklearn.model_selection import cross_val_score
+accuracies = cross_val_score(estimator = XGB, X = X_train, y = y_train, cv = 10)
+accuracies.mean()
+accuracies.std()
+
+from sklearn.model_selection import cross_val_score
+accuracies = cross_val_score(estimator = svm_clf, X = X_train, y = y_train, cv = 10)
+accuracies.mean()
+accuracies.std()
+
+
+
+
+
+##Submition data
+test_data['prediction']=XGB.predict_proba(test)[:,1]
+test_data[['customer_ID','prediction']].to_csv("submission.csv", index=False)
 
 
 
