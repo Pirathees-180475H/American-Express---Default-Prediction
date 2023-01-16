@@ -34,7 +34,7 @@ train.head()
 train.shape, test.shape, train_labels.shape
 
 #Data Preprocessing
-#Checking Missing values having more than 40%
+#Checking Missing values having more than 40% and drop
 columns = train.columns[(train.isna().sum()/len(train))*100>40]
 train = train.drop(columns, axis=1)
 test = test.drop(columns, axis=1)
@@ -63,6 +63,42 @@ train = train.drop(['index','customer_ID', 'S_2'], axis=1)
 test = test.drop(['index','customer_ID', 'S_2'], axis=1)
 
 #feature enginerring
+#One-hot encoding
+train = pd.get_dummies(train, columns=cat_col, drop_first=True)
+test = pd.get_dummies(test, columns=cat_col, drop_first=True)
+features=train.loc[:, test.columns]
+target = train['target']
+
+#Scaling 
+from sklearn.preprocessing import MinMaxScaler
+features_columns
+minMaxscaler = MinMaxScaler(feature_range=(0, 1))
+minMaxscaler.fit(features)
+features = scaler.transform(features)
+features=pd.DataFrame(features, columns=features_columns)
+
+#outlier handling
+import pandas as pd
+import numpy as np
+outliers_removed_features = pd.DataFrame()
+for column in features.columns:
+    # calculate the quartiles
+    q1, q3 = np.percentile(features[column], [25, 75])
+    iqr = q3 - q1
+    lower_bound = q1 - (1.5 * iqr)
+    upper_bound = q3 + (1.5 * iqr)
+    column_without_outliers = features[column][(features[column] > lower_bound) & (features[column] < upper_bound)]
+    outliers_removed_features[column] = column_without_outliers
+
+features=outlier_removed_features
+
+#Split data
+from sklearn.model_selection import train_test_split
+X_train, X_test, y_train, y_test = train_test_split(Features, target, test_size=0.3, random_state=0)
+
+#XGB Classifier
+
+
 
 
 
